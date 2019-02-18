@@ -1,0 +1,124 @@
+'''
+Retirement (improved)
+
+Marty Jiffar
+
+Given yearly spending, starting value of your portfolio,
+and length of retirement, shows you how your portfolio
+would have fared historically (using individual inflation 
+and return rates from each year of retirement).
+
+inspired by firecalc.com
+'''
+
+import numpy as np
+import pandas as pd
+import os.path
+
+def read_infl_rates(csv_file):
+    '''
+    Purpose: Read in csv.
+
+    Inputs:
+        csv_file (string): path to the csv file to open
+
+    Returns: (dataframe): inflation rates
+    '''
+
+    if os.path.exists(csv_file):
+        col_types = {'Year': int, 'JAN': float,'FEB': float, 
+        'MAR': float,'APR': float, 'MAY': float, 
+        'JUN': float,'JUL': float, 'AUG': float,
+        'SEP': float,'OCT': float, 'NOV': float, 'DEC': float}
+        df = pd.read_csv(csv_file, dtype = col_types)
+        df.set_index("Year", inplace=True)
+        return df
+
+    else:
+        return None
+
+
+# citation:
+# https://www.kaggle.com/grfiv4/convert-to-numeric-python
+
+def p2f(x):
+    '''
+    Converts percentage into float
+
+    Inputs: x (string)
+
+    Outputs: num (float)
+    '''
+
+    return float(x.strip('%'))
+
+def read_return_rates(csv_file):
+    '''
+    Purpose: Read in csv.
+
+    Inputs:
+        csv_file (string): path to the csv file to open
+
+    Returns: (dataframe): inflation rates
+    '''
+
+    if os.path.exists(csv_file):
+        col_types = {'Year': int, 'S&P 500 (includes dividends)': str,
+        '3-month T.Bill': str,'Return on 10-year T. Bond': str,
+        'Stocks': str, 'T.Bills': str, 'T.Bonds': str,
+        'Stocks - Bills': str, 'Stocks - Bonds': str,
+        'Historical risk premium': str,'Inflation Rate': str, 
+        'S&P 500 (includes dividends)2': str, 
+        '3-month T. Bill (Real)': str,'!0-year T.Bonds': str}
+
+        df = pd.read_csv(csv_file,
+            converters = {'S&P 500 (includes dividends)': p2f})
+        df.set_index("Year", inplace=True)
+        return df
+
+    else:
+        return None
+
+def calc_improved(spending, portfolio, years, infl_data, 
+    returns_data):
+    '''
+    Calculates how your portfolio would have fared historically for the 
+    period of years entered.
+    '''
+
+    starting_year = returns_data.index[0]
+    current_year = starting_year
+    portfolio_results = []
+
+    while starting_year <= (returns_data.index[-1] - years):
+        current_portfolio = portfolio
+        while current_year < starting_year + years:
+            current_portfolio = (current_portfolio - (spending + 
+                spending * 
+                (infl_data.at[current_year, 'AVE'] / 100)) - 
+                (current_portfolio * 
+                    (infl_data.at[current_year, 'AVE'] / 100)) 
+                + (current_portfolio * 
+                    (returns_data.at[current_year, 
+                    'S&P 500 (includes dividends)'] / 100)))
+            current_year += 1
+        portfolio_results.append(current_portfolio)
+        starting_year += 1
+
+    return ("We performed " + str(len(portfolio_results))
+        + " " + str(years) + " year cycles. The minimum portfolio was $" 
+        '%.2f'%min(portfolio_results) + ", and the maximum was $" 
+        '%.2f'%max(portfolio_results) + ". The average value of your" 
+        " portfolio was $" + str('%.2f'%np.mean(portfolio_results)))
+
+def run():
+    infl_data = read_infl_rates("historical_inflation.csv")
+    returns_data = read_return_rates("annual_SP_returns.csv")
+    spending = int(input("yearly spending: "))
+    portfolio = int(input("starting portfolio: "))
+    years = int(input("length of retirement (years): "))
+    print(calc_improved(spending, portfolio, years, 
+        infl_data, returns_data))
+
+if __name__ == "__main__": 
+    run()
