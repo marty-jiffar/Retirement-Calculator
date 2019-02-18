@@ -1,0 +1,178 @@
+'''
+Retirement
+
+Marty Jiffar
+
+Given yearly spending, starting value of your portfolio,
+length of retirement, and decade, shows how your portfolio
+would have fared in the past (using the average
+inflation/returns rate of the decade(s)).
+
+inspired by firecalc.com
+'''
+
+import numpy as np
+import pandas as pd
+import os.path
+
+DECADES = {
+    "20's": [1928, 1929],
+    "30's": [1930, 1931, 1932, 1933, 1934, 
+            1935, 1936, 1937, 1938, 1939],
+    "40's": [1940, 1941, 1942, 1943, 1944, 
+            1945, 1946, 1947, 1948, 1949],
+    "50's": [1950, 1951, 1952, 1953, 1954, 
+            1955, 1956, 1957, 1958, 1959],
+    "60's": [1960, 1961, 1962, 1963, 1964, 
+            1965, 1966, 1967, 1968, 1969],
+    "70's": [1970, 1971, 1972, 1973, 1974, 
+            1975, 1976, 1977, 1978, 1979],
+    "80's": [1980, 1981, 1982, 1983, 1984, 
+            1985, 1986, 1987, 1988, 1989],
+    "90's": [1990, 1991, 1992, 1993, 1994, 
+            1995, 1996, 1997, 1998, 1999],
+    "00's": [2000, 2001, 2002, 2003, 2004,
+            2005, 2006, 2007, 2008, 2009],
+    "10's": [2010, 2011, 2012, 2013, 2014,
+            2015, 2016, 2017, 2018]}
+
+def read_infl_rates(csv_file):
+    '''
+    Purpose: Read in csv.
+
+    Inputs:
+        csv_file (string): path to the csv file to open
+
+    Returns: (dataframe): inflation rates
+    '''
+
+    if os.path.exists(csv_file):
+        col_types = {'Year': int, 'JAN': float,'FEB': float, 
+        'MAR': float,'APR': float, 'MAY': float, 
+        'JUN': float,'JUL': float, 'AUG': float,
+        'SEP': float,'OCT': float, 'NOV': float, 'DEC': float}
+        df = pd.read_csv(csv_file, dtype = col_types)
+        
+        return df
+
+    else:
+        return None
+
+# citation:
+# https://www.kaggle.com/grfiv4/convert-to-numeric-python
+
+def p2f(x):
+    '''
+    Converts percentage into float
+
+    Inputs: x (string)
+
+    Outputs: num (float)
+    '''
+
+    return float(x.strip('%'))
+
+def read_return_rates(csv_file):
+    '''
+    Purpose: Read in csv.
+
+    Inputs:
+        csv_file (string): path to the csv file to open
+
+    Returns: (dataframe): inflation rates
+    '''
+
+    if os.path.exists(csv_file):
+        col_types = {'Year': int, 'S&P 500 (includes dividends)': str,
+        '3-month T.Bill': str,'Return on 10-year T. Bond': str,
+        'Stocks': str, 'T.Bills': str, 'T.Bonds': str,
+        'Stocks - Bills': str, 'Stocks - Bonds': str,
+        'Historical risk premium': str,'Inflation Rate': str, 
+        'S&P 500 (includes dividends)2': str, 
+        '3-month T. Bill (Real)': str,'!0-year T.Bonds': str}
+
+        df = pd.read_csv(csv_file,
+            converters = {'S&P 500 (includes dividends)': p2f})
+        
+        return df
+
+    else:
+        return None
+
+def apply_val_filter(df, decade_lst):
+    '''
+    Filters dataframe by value
+
+    Inputs: df (dataframe)
+            decade_lst (list)
+
+    Outputs: df_result (dataframe)
+    '''
+
+    year_filter = []
+    for decade in decade_lst:
+        year_filter += DECADES[decade]
+
+    right_decade = df["Year"].isin(year_filter)
+    df_result = df[right_decade]
+
+    return df_result
+
+def calc(spending, portfolio, years, decade_list, infl_data, returns_data):
+    '''
+    Calculates whether porfolio is sufficient
+    for retirement.
+    Inputs: spending (int)
+            portfolio (int)
+            years (int)
+            infl_data (dataframe)
+            returns_data (dataframe)
+
+    Output: outcome (string)
+    '''
+
+    if decade_list[0] == "ALL":
+        avg_infl = infl_data["AVE"].mean() / 100
+        avg_return = returns_data["S&P 500 (includes dividends)"].mean() / 100
+
+    else:
+        filtered_infl = apply_val_filter(infl_data, decade_list)
+        avg_infl = filtered_infl["AVE"].mean() / 100
+        filtered_returns = apply_val_filter(returns_data, decade_list)
+        avg_return = (filtered_returns["S&P 500 (includes dividends)"].mean()
+            / 100)
+
+    i = 0
+    while i < years:
+        portfolio = (portfolio - (spending + spending * avg_infl) - 
+            (portfolio * avg_infl) + (portfolio * avg_return))
+        i += 1
+
+    print("The average return rate of the inputed decade(s) was " +
+        '%.2f'%(avg_return * 100) + "%. The average inflation rate was " +
+        '%.2f'%(avg_infl * 100) + "%. ")
+                
+    if portfolio > 0:
+        return ("Based on your inputs, you would end up with $" + 
+            '%.2f'%portfolio + " in your portfolio. Congrats!")
+    else:
+        return ("Based on your inputs, you would end up with -$" + 
+            '%.2f'%-portfolio + " in your portfolio. Sorry...")
+
+def run():
+    infl_data = read_infl_rates("historical_inflation.csv")
+    returns_data = read_return_rates("annual_SP_returns.csv")
+    spending = int(input("yearly spending: "))
+    portfolio = int(input("starting portfolio: "))
+    years = int(input("length of retirement (years): "))
+    decade = input("Which decade(s)? For one decade, type 30's," 
+        "for example. For multiple decades, type 30's 60's 80's, "
+        "for example. For all decades, type ALL. "
+        "(Earliest complete decade is 30's.): ")
+    decade_list = decade.split()
+
+    print(calc(spending, portfolio, years, decade_list, infl_data, 
+        returns_data))
+
+if __name__ == "__main__": 
+    run()
