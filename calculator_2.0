@@ -79,7 +79,7 @@ def read_return_rates(csv_file):
     else:
         return None
 
-def calc_improved(spending, portfolio, years, infl_data, 
+def calc_improved(spending, starting_portfolio, years, infl_data, 
     returns_data):
     '''
     Calculates how your portfolio would have fared historically for the 
@@ -87,11 +87,11 @@ def calc_improved(spending, portfolio, years, infl_data,
     '''
 
     starting_year = returns_data.index[0]
-    current_year = starting_year
     portfolio_results = []
 
     while starting_year <= (returns_data.index[-1] - years):
-        current_portfolio = portfolio
+        current_portfolio = starting_portfolio
+        current_year = starting_year
         while current_year < starting_year + years:
             current_portfolio = (current_portfolio - (spending + 
                 spending * 
@@ -102,6 +102,7 @@ def calc_improved(spending, portfolio, years, infl_data,
                     (returns_data.at[current_year, 
                     'S&P 500 (includes dividends)'] / 100)))
             current_year += 1
+
         portfolio_results.append(current_portfolio)
         starting_year += 1
 
