@@ -1,0 +1,104 @@
+'''
+Retirement Tests
+
+Marty Jiffar
+
+Tests retirement calculator with different
+inputs.
+'''
+
+import numpy as np
+import pandas as pd
+import os.path
+import analyze_improved
+import analyze
+
+
+def test_1(infl_data_1, returns_data_1, infl_data_2, returns_data_2):
+    spending = 30000
+    portfolio = 750000
+    years = 30
+    decades = ["30's"]
+
+    result_1 = analyze.calc(spending, portfolio, years, decades, 
+        infl_data_1, returns_data_1)
+    result_two_point_0 = analyze_improved.calc_improved(spending, portfolio, 
+        years, infl_data_2, returns_data_2)
+
+    return "spending: " + str(spending) + ", portfolio: " + str(portfolio) + \
+        ", length (years): " + str(years) + ", decades (for result 1): " + \
+        str(decades) + "\n" + "Result 1: " + result_1 + "\n\nResult 2: " + \
+        result_two_point_0
+
+
+def test_2(infl_data_1, returns_data_1, infl_data_2, returns_data_2):
+    spending = 30000
+    portfolio = 750000
+    years = 60
+    decades = ["20's", "50's"]
+
+    result_1 = analyze.calc(spending, portfolio, years, decades, 
+        infl_data_1, returns_data_1)
+    result_two_point_0 = analyze_improved.calc_improved(spending, portfolio, 
+        years, infl_data_2, returns_data_2)
+
+    return "Spending: " + str(spending) + "\nPortfolio: " + str(portfolio) + \
+        "\nLength (years): " + str(years) + "\nDecades (for result 1): " + \
+        str(decades) + "\n\nResult 1: " + result_1 + "\n\nResult 2: " + \
+        result_two_point_0
+
+
+def test_3(infl_data_1, returns_data_1, infl_data_2, returns_data_2):
+    spending = 22000
+    portfolio = 500000
+    years = 40
+    decades = ["ALL"]
+
+    result_1 = analyze.calc(spending, portfolio, years, decades, 
+        infl_data_1, returns_data_1)
+    result_two_point_0 = analyze_improved.calc_improved(spending, portfolio, 
+        years, infl_data_2, returns_data_2)
+
+    return "Spending: " + str(spending) + "\nPortfolio: " + str(portfolio) + \
+        "\nLength (years): " + str(years) + "\nDecades (for result 1): " + \
+        str(decades) + "\n\nResult 1: " + result_1 + "\n\nResult 2: " + \
+        result_two_point_0
+
+def test_4(infl_data_1, returns_data_1, infl_data_2, returns_data_2):
+    spending = 15000
+    portfolio = 0
+    years = 5
+    decades = ["ALL"]
+
+    result_1 = analyze.calc(spending, portfolio, years, decades, 
+        infl_data_1, returns_data_1)
+    result_two_point_0 = analyze_improved.calc_improved(spending, portfolio, 
+        years, infl_data_2, returns_data_2)
+
+    return "Spending: " + str(spending) + "\nPortfolio: " + str(portfolio) + \
+        "\nLength (years): " + str(years) + "\nDecades (for result 1): " + \
+        str(decades) + "\n\nResult 1: " + result_1 + "\n\nResult 2: " + \
+        result_two_point_0
+
+
+def run():
+    infl_data_1 = analyze.read_infl_rates("historical_inflation.csv")
+    infl_data_2 = analyze_improved.read_infl_rates("historical_inflation.csv")
+    returns_data_1 = analyze.read_return_rates("annual_SP_returns.csv")
+    returns_data_2 = analyze_improved.read_return_rates("annual_SP_returns.csv")
+
+    print("TEST 1\n")
+    print(test_1(infl_data_1, returns_data_1, infl_data_2, returns_data_2))
+    print()
+    print("TEST 2\n")
+    print(test_2(infl_data_1, returns_data_1, infl_data_2, returns_data_2))
+    print()
+    print("TEST 3\n")
+    print(test_3(infl_data_1, returns_data_1, infl_data_2, returns_data_2))
+    print()
+    print("TEST 4\n")
+    print(test_4(infl_data_1, returns_data_1, infl_data_2, returns_data_2))
+
+
+if __name__ == "__main__":
+    run()
